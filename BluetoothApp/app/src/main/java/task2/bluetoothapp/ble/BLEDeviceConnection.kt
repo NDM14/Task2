@@ -1,5 +1,6 @@
 package task2.bluetoothapp.ble
 
+import android.R.attr
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
@@ -9,12 +10,9 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
+import java.nio.ByteBuffer
 import java.util.UUID
 
-val CTF_SERVICE_UUID: UUID = UUID.fromString("8c380000-10bd-4fdb-ba21-1922d6cf860d")
-val PASSWORD_CHARACTERISTIC_UUID: UUID = UUID.fromString("8c380001-10bd-4fdb-ba21-1922d6cf860d")
-val NAME_CHARACTERISTIC_UUID: UUID = UUID.fromString("8c380002-10bd-4fdb-ba21-1922d6cf860d")
 
 @Suppress("DEPRECATION")
 class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") constructor(
@@ -22,12 +20,12 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     private val bluetoothDevice: BluetoothDevice
 ) {
     val isConnected = MutableStateFlow(false)
-    val passwordRead = MutableStateFlow<String?>(null)
-    val successfulNameWrites = MutableStateFlow(0)
+    val currentValue = MutableStateFlow<String?>(null)
     val services = MutableStateFlow<List<BluetoothGattService>>(emptyList())
 
     private val callback = object: BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+            Log.w("bt", "onConnectionStateChange");
             super.onConnectionStateChange(gatt, status, newState)
             val connected = newState == BluetoothGatt.STATE_CONNECTED
             if (connected) {
@@ -38,6 +36,7 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+            Log.w("bt", "onServicesDiscovered");
             super.onServicesDiscovered(gatt, status)
             services.value = gatt.services
         }
@@ -48,10 +47,10 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
             characteristic: BluetoothGattCharacteristic,
             status: Int
         ) {
+            Log.w("bt", "onCharacteristicRead");
+
             super.onCharacteristicRead(gatt, characteristic, status)
-            if (characteristic.uuid == PASSWORD_CHARACTERISTIC_UUID) {
-                passwordRead.value = String(characteristic.value)
-            }
+            currentValue.value = String(characteristic.value)
         }
 
         override fun onCharacteristicWrite(
@@ -59,10 +58,11 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
             characteristic: BluetoothGattCharacteristic,
             status: Int
         ) {
+            Log.w("bt", "onCharacteristicWrite");
+
             super.onCharacteristicWrite(gatt, characteristic, status)
-            if (characteristic.uuid == NAME_CHARACTERISTIC_UUID) {
-                successfulNameWrites.update { it + 1 }
-            }
+
+            // TODO
         }
     }
 
@@ -86,23 +86,28 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     }
 
     @RequiresPermission(PERMISSION_BLUETOOTH_CONNECT)
-    fun readPassword() {
-        val service = gatt?.getService(CTF_SERVICE_UUID)
-        val characteristic = service?.getCharacteristic(PASSWORD_CHARACTERISTIC_UUID)
-        if (characteristic != null) {
-            val success = gatt?.readCharacteristic(characteristic)
+    fun readCharacteristic(service: UUID, characteristic: UUID) {
+        val c = gatt?.getService(service)?.getCharacteristic(characteristic)
+        if (c != null) {
+            val success = gatt?.readCharacteristic(c)
             Log.v("bluetooth", "Read status: $success")
         }
     }
 
     @RequiresPermission(PERMISSION_BLUETOOTH_CONNECT)
-    fun writeName() {
-        val service = gatt?.getService(CTF_SERVICE_UUID)
-        val characteristic = service?.getCharacteristic(NAME_CHARACTERISTIC_UUID)
-        if (characteristic != null) {
-            characteristic.value = "Tom".toByteArray()
-            val success = gatt?.writeCharacteristic(characteristic)
+    fun writeCharacteristic(service: UUID, characteristic: UUID, value: Short) {
+        val c = gatt?.getService(service)?.getCharacteristic(characteristic)
+        if (c != null) {
+            val buffer = ByteBuffer.allocate(2)
+            buffer.putShort(value)
+
+            c.value = buffer.array()
+            val success = gatt?.writeCharacteristic(c)
             Log.v("bluetooth", "Write status: $success")
         }
+    }
+
+    fun readPassword() {
+        TODO("Not yet implemented")
     }
 }

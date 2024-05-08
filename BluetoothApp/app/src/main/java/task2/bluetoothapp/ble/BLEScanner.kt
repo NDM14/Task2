@@ -1,6 +1,5 @@
 package task2.bluetoothapp.ble
 
-import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
@@ -17,32 +16,36 @@ const val PERMISSION_BLUETOOTH_CONNECT = "android.permission.BLUETOOTH_CONNECT"
 
 class BLEScanner(context: Context) {
 
-    private val bluetooth = context.getSystemService(Context.BLUETOOTH_SERVICE)
-        as? BluetoothManager
-        ?: throw Exception("Bluetooth is not supported by this device")
+    private val bluetooth =
+        context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager ?: throw Exception(
+            "Bluetooth is not supported by this device"
+        )
 
     val isScanning = MutableStateFlow(false)
 
-    val foundDevices = MutableStateFlow<List<BluetoothDevice>>(emptyList())
+    val foundDevices = MutableStateFlow<List<ScanResult>>(emptyList())
 
     private val scanner: BluetoothLeScanner
         get() = bluetooth.adapter.bluetoothLeScanner
 
     private val scanCallback = object : ScanCallback() {
+        @RequiresPermission(PERMISSION_BLUETOOTH_CONNECT)
         override fun onScanResult(callbackType: Int, result: ScanResult?) {
             super.onScanResult(callbackType, result)
-            result ?: return
+            result?: return
 
-            if (!foundDevices.value.contains(result.device)) {
-                foundDevices.update { it + result.device }
+            if (!foundDevices.value.contains(result) && result.device?.name?.startsWith("IPVS") == true) {
+                foundDevices.update { it + result }
             }
         }
 
         override fun onBatchScanResults(results: MutableList<ScanResult>?) {
+
             super.onBatchScanResults(results)
         }
 
         override fun onScanFailed(errorCode: Int) {
+
             super.onScanFailed(errorCode)
             isScanning.value = false
         }
@@ -59,6 +62,4 @@ class BLEScanner(context: Context) {
         scanner.stopScan(scanCallback)
         isScanning.value = false
     }
-
-
 }

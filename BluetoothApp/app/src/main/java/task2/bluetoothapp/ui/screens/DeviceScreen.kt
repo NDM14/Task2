@@ -1,5 +1,7 @@
 package task2.bluetoothapp.ui.screens
 
+import android.os.ParcelUuid
+
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
@@ -14,20 +16,29 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import task2.bluetoothapp.ble.CTF_SERVICE_UUID
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import java.util.UUID
+
+var WEATHER_SERVICE_UUID: String = "00000002-0000-0000-fdfd-fdfdfdfdfdfd"
+var FAN_SERVICE_UUID: String = "00000001-0000-0000-fdfd-fdfdfdfdfdfd"
+var TEMP_UUID: UUID = UUID.fromString("00002a1c-0000-1000-8000-00805f9b34fb")
+var HUM_UUID: UUID = UUID.fromString("00002a1c-0000-1000-8000-00805f9b34fb")
 @Composable
 fun DeviceScreen(
     unselectDevice: () -> Unit,
     isDeviceConnected: Boolean,
     discoveredCharacteristics: Map<String, List<String>>,
-    password: String?,
-    nameWrittenTimes: Int,
+    currentValue: String?,
     connect: () -> Unit,
     discoverServices: () -> Unit,
-    readPassword: () -> Unit,
-    writeName: () -> Unit
+    readCharacteristic: (UUID, UUID) -> Unit,
+    writeCharacteristic: (UUID, UUID, Short) -> Unit
 ) {
-    val foundTargetService = discoveredCharacteristics.contains(CTF_SERVICE_UUID.toString())
+    val weatherService = discoveredCharacteristics.get(WEATHER_SERVICE_UUID);
+    val fanService = discoveredCharacteristics.get(FAN_SERVICE_UUID);
+    val temperature = null;
+    val humidity = null;
 
     Column(
         Modifier.scrollable(rememberScrollState(), Orientation.Vertical)
@@ -41,28 +52,40 @@ fun DeviceScreen(
         }
         LazyColumn {
             items(discoveredCharacteristics.keys.sorted()) { serviceUuid ->
-                Text(text = serviceUuid, fontWeight = FontWeight.Black)
+                Text(
+                    text = when (serviceUuid) {
+                        WEATHER_SERVICE_UUID -> {
+                            "[Weather]"
+                        }
+                        FAN_SERVICE_UUID -> {
+                            "[Fan]"
+                        }
+                        else -> {
+                            "[Unknown] $serviceUuid"
+                        }
+                    }, fontWeight = FontWeight.Black
+                )
                 Column(modifier = Modifier.padding(start = 10.dp)) {
                     discoveredCharacteristics[serviceUuid]?.forEach {
-                        Text(it)
+                        Text(
+                            it
+                        )
                     }
                 }
             }
         }
-        Button(onClick = readPassword, enabled = isDeviceConnected && foundTargetService) {
-            Text("3. Read Password")
+        Button(onClick = { readCharacteristic(UUID.fromString(WEATHER_SERVICE_UUID), TEMP_UUID) }, enabled = weatherService != null) {
+            Text("Read Temperature")
         }
-        if (password != null) {
-            Text("Found password: $password")
-        }
-        Button(onClick = writeName, enabled = isDeviceConnected && foundTargetService) {
-            Text("4. Write Your Name")
-        }
-        if (nameWrittenTimes > 0) {
-            Text("Successful writes: $nameWrittenTimes")
+        Button(onClick = { readCharacteristic(UUID.fromString(WEATHER_SERVICE_UUID), TEMP_UUID) }, enabled = weatherService != null) {
+            Text("Read Humidity")
         }
 
-        OutlinedButton(modifier = Modifier.padding(top = 40.dp),  onClick = unselectDevice) {
+        if (currentValue != null) {
+            Text("Last value: $currentValue")
+        }
+
+        OutlinedButton(modifier = Modifier.padding(top = 40.dp), onClick = unselectDevice) {
             Text("Disconnect")
         }
     }

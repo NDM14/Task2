@@ -1,6 +1,8 @@
 package task2.bluetoothapp.ui.navigation
 
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -8,12 +10,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import task2.bluetoothapp.ui.viewmodel.BLEViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import task2.bluetoothapp.ui.screens.PermissionsRequiredScreen
-import task2.bluetoothapp.ui.screens.haveAllPermissions
 import task2.bluetoothapp.ui.screens.DeviceScreen
+import task2.bluetoothapp.ui.screens.PermissionsRequiredScreen
 import task2.bluetoothapp.ui.screens.ScanningScreen
+import task2.bluetoothapp.ui.screens.haveAllPermissions
+import task2.bluetoothapp.ui.viewmodel.BLEViewModel
+
 
 @SuppressLint("MissingPermission")
 @Composable
@@ -37,7 +40,7 @@ fun Navigation(viewModel: BLEViewModel = viewModel()) {
             stopScanning = viewModel::stopScanning,
             selectDevice = { device ->
                 viewModel.stopScanning()
-                viewModel.setActiveDevice(device)
+                viewModel.setActiveDevice(device.device)
             }
         )
     }
@@ -49,12 +52,11 @@ fun Navigation(viewModel: BLEViewModel = viewModel()) {
             },
             isDeviceConnected = uiState.isDeviceConnected,
             discoveredCharacteristics = uiState.discoveredCharacteristics,
-            password = uiState.password,
-            nameWrittenTimes = uiState.nameWrittenTimes,
             connect = viewModel::connectActiveDevice,
             discoverServices = viewModel::discoverActiveDeviceServices,
-            readPassword = viewModel::readPasswordFromActiveDevice,
-            writeName = viewModel::writeNameToActiveDevice
+            currentValue= uiState.currentValue,
+            readCharacteristic = viewModel::readCharacteristic,
+            writeCharacteristic = viewModel::writeCharacteristic
         )
     }
 

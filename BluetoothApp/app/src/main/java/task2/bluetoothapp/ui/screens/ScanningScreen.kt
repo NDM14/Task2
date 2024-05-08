@@ -1,6 +1,8 @@
 package task2.bluetoothapp.ui.screens
 
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.le.ScanResult
+import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,22 +27,21 @@ import task2.bluetoothapp.ble.PERMISSION_BLUETOOTH_SCAN
 @RequiresPermission(allOf = [PERMISSION_BLUETOOTH_SCAN, PERMISSION_BLUETOOTH_CONNECT])
 fun ScanningScreen(
     isScanning: Boolean,
-    foundDevices: List<BluetoothDevice>,
+    foundDevices: List<ScanResult>,
     startScanning: () -> Unit,
     stopScanning: () -> Unit,
-    selectDevice: (BluetoothDevice) -> Unit
+    selectDevice: (ScanResult) -> Unit
 ) {
-    Column (
+    Column(
         Modifier.padding(horizontal = 10.dp)
-    ){
+    ) {
         if (isScanning) {
             Text("Scanning...")
 
             Button(onClick = stopScanning) {
                 Text("Stop Scanning")
             }
-        }
-        else {
+        } else {
             Button(onClick = startScanning) {
                 Text("Start Scanning")
             }
@@ -51,7 +52,7 @@ fun ScanningScreen(
         ) {
             items(foundDevices) { device ->
                 DeviceItem(
-                    deviceName = device.name,
+                    deviceName = device.device.name,
                     selectDevice = { selectDevice(device) }
                 )
             }

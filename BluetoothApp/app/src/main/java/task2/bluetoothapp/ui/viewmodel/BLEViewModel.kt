@@ -4,6 +4,8 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Application
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.le.ScanRecord
+import android.bluetooth.le.ScanResult
 import android.content.pm.PackageManager
 import androidx.annotation.RequiresPermission
 import androidx.compose.ui.platform.LocalContext
@@ -24,6 +26,7 @@ import task2.bluetoothapp.ble.BLEDeviceConnection
 import task2.bluetoothapp.ble.BLEScanner
 import task2.bluetoothapp.ble.PERMISSION_BLUETOOTH_CONNECT
 import task2.bluetoothapp.ble.PERMISSION_BLUETOOTH_SCAN
+import java.util.UUID
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class BLEViewModel(private val application: Application): AndroidViewModel(application) {
@@ -34,26 +37,23 @@ class BLEViewModel(private val application: Application): AndroidViewModel(appli
     private val activeDeviceServices = activeConnection.flatMapLatest {
         it?.services ?: flowOf(emptyList())
     }
-    private val activeDevicePassword = activeConnection.flatMapLatest {
-        it?.passwordRead ?: flowOf(null)
+
+    private val activeCurrentValue = activeConnection.flatMapLatest {
+        it?.currentValue ?: flowOf(null)
     }
-    private val activeDeviceNameWrittenTimes = activeConnection.flatMapLatest {
-        it?.successfulNameWrites ?: flowOf(0)
-    }
+
 
     private val _uiState = MutableStateFlow(BLEClientUIState())
     val uiState = combine(
         _uiState,
         isDeviceConnected,
         activeDeviceServices,
-        activeDevicePassword,
-        activeDeviceNameWrittenTimes
-    ) { state, isDeviceConnected, services, password, nameWrittenTimes ->
+        activeCurrentValue
+    ) { state, isDeviceConnected, services, currentValue->
         state.copy(
             isDeviceConnected = isDeviceConnected,
             discoveredCharacteristics = services.associate { service -> Pair(service.uuid.toString(), service.characteristics.map { it.uuid.toString() }) },
-            password = password,
-            nameWrittenTimes = nameWrittenTimes
+            currentValue = currentValue
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), BLEClientUIState())
 
@@ -93,6 +93,16 @@ class BLEViewModel(private val application: Application): AndroidViewModel(appli
     }
 
     @RequiresPermission(PERMISSION_BLUETOOTH_CONNECT)
+    fun readCharacteristic(service: UUID, characteristic: UUID) {
+        activeConnection.value?.readCharacteristic(service, characteristic)
+    }
+
+    @RequiresPermission(PERMISSION_BLUETOOTH_CONNECT)
+    fun writeCharacteristic(service: UUID, characteristic: UUID, value: Short) {
+        activeConnection.value?.writeCharacteristic(service, characteristic, value)
+    }
+
+    @RequiresPermission(PERMISSION_BLUETOOTH_CONNECT)
     fun disconnectActiveDevice() {
         activeConnection.value?.disconnect()
     }
@@ -105,11 +115,6 @@ class BLEViewModel(private val application: Application): AndroidViewModel(appli
     @RequiresPermission(PERMISSION_BLUETOOTH_CONNECT)
     fun readPasswordFromActiveDevice() {
         activeConnection.value?.readPassword()
-    }
-
-    @RequiresPermission(PERMISSION_BLUETOOTH_CONNECT)
-    fun writeNameToActiveDevice() {
-        activeConnection.value?.writeName()
     }
 
     override fun onCleared() {
@@ -130,10 +135,9 @@ class BLEViewModel(private val application: Application): AndroidViewModel(appli
 
 data class BLEClientUIState(
     val isScanning: Boolean = false,
-    val foundDevices: List<BluetoothDevice> = emptyList(),
+    val foundDevices: List<ScanResult> = emptyList(),
     val activeDevice: BluetoothDevice? = null,
     val isDeviceConnected: Boolean = false,
     val discoveredCharacteristics: Map<String, List<String>> = emptyMap(),
-    val password: String? = null,
-    val nameWrittenTimes: Int = 0
-)
+    val currentValue: String? = null,
+    )
