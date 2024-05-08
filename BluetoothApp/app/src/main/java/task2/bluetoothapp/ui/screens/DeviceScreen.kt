@@ -19,9 +19,11 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.UUID
+import android.util.Log
 
 var WEATHER_SERVICE_UUID: String = "00000002-0000-0000-fdfd-fdfdfdfdfdfd"
 var FAN_SERVICE_UUID: String = "00000001-0000-0000-fdfd-fdfdfdfdfdfd"
+var TEMP_UUID_S: String = "00002a1c-0000-1000-8000-00805f9b34fb"
 var TEMP_UUID: UUID = UUID.fromString("00002a1c-0000-1000-8000-00805f9b34fb")
 var HUM_UUID: UUID = UUID.fromString("00002a1c-0000-1000-8000-00805f9b34fb")
 @Composable
@@ -79,10 +81,20 @@ fun DeviceScreen(
         }
         Button(onClick = { readCharacteristic(UUID.fromString(WEATHER_SERVICE_UUID), TEMP_UUID) }, enabled = weatherService != null) {
             Text("Read Humidity")
+
         }
 
         if (currentValue != null) {
-            Text("Last value: $currentValue")
+            Text("Last value: $currentValue" )
+
+            if(currentValue == null){
+                // handle null result, eg. throw exception, return default, etc
+            }  else {
+                Log.i("data type", currentValue )
+            }
+
+
+
         }
 
         OutlinedButton(modifier = Modifier.padding(top = 40.dp), onClick = unselectDevice) {
