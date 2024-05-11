@@ -25,7 +25,7 @@ var WEATHER_SERVICE_UUID: String = "00000002-0000-0000-fdfd-fdfdfdfdfdfd"
 var FAN_SERVICE_UUID: String = "00000001-0000-0000-fdfd-fdfdfdfdfdfd"
 var TEMP_UUID_S: String = "00002a1c-0000-1000-8000-00805f9b34fb"
 var TEMP_UUID: UUID = UUID.fromString("00002a1c-0000-1000-8000-00805f9b34fb")
-var HUM_UUID: UUID = UUID.fromString("00002a1c-0000-1000-8000-00805f9b34fb")
+var HUM_UUID: UUID = UUID.fromString("00002a6f-0000-1000-8000-00805f9b34fb")
 @Composable
 fun DeviceScreen(
     unselectDevice: () -> Unit,
@@ -79,7 +79,7 @@ fun DeviceScreen(
         Button(onClick = { readCharacteristic(UUID.fromString(WEATHER_SERVICE_UUID), TEMP_UUID) }, enabled = weatherService != null) {
             Text("Read Temperature")
         }
-        Button(onClick = { readCharacteristic(UUID.fromString(WEATHER_SERVICE_UUID), TEMP_UUID) }, enabled = weatherService != null) {
+        Button(onClick = { readCharacteristic(UUID.fromString(WEATHER_SERVICE_UUID), HUM_UUID) }, enabled = weatherService != null) {
             Text("Read Humidity")
 
         }
