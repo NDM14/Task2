@@ -55,6 +55,8 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
             Log.w("bt", "onCharacteristicRead");
             super.onCharacteristicRead(gatt, characteristic, status)
 
+            // if branch: characteristic is temperature measurement
+            // else branch: characteristic is humidity
             if (characteristic.getUuid().toString()=="00002a1c-0000-1000-8000-00805f9b34fb"){
                 val flags = characteristic.getIntValue(FORMAT_UINT8, 0).toString()
                 val unformattedTemp =characteristic.getIntValue(FORMAT_UINT16, 1).toString()
@@ -78,10 +80,12 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
             gatt: BluetoothGatt?,
             characteristic: BluetoothGattCharacteristic
         ) {
-            Log.i("bt","in characteristic changed")
+            Log.i("bt","onCharacteristicChanged")
 
             super.onCharacteristicChanged(gatt, characteristic)
 
+            // if branch: characteristic is temperature measurement
+            // else branch: characteristic is humidity
             if (characteristic.getUuid().toString()=="00002a1c-0000-1000-8000-00805f9b34fb"){
                 val flags = characteristic.getIntValue(FORMAT_UINT8, 0).toString()
                 val unformattedTemp = characteristic.getIntValue(FORMAT_UINT16, 1).toString()
@@ -107,6 +111,7 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
             // TODO
         }
 
+        // checks whether the subscription to the characteristic was successful
         override fun onDescriptorWrite(
             gatt: BluetoothGatt?,
             descriptor: BluetoothGattDescriptor,
@@ -149,9 +154,11 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
         val c = s?.getCharacteristic(characteristic)
 
         if (c != null) {
+            // use these 2 lines to update the values whenever the button is clicked
             //val success = gatt?.readCharacteristic(c)
             //Log.v("bluetooth", "Read status: $success")
 
+            // use these lines to update the values whenever they change (doesn't work yet)
             gatt?.setCharacteristicNotification(c, true)
             val CLIENT_CONFIG_DESCRIPTOR = characteristic
             Log.i("bt", "descriptor: $CLIENT_CONFIG_DESCRIPTOR")
