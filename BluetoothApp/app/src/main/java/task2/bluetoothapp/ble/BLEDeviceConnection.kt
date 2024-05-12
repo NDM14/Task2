@@ -171,14 +171,10 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     }
 
     @RequiresPermission(PERMISSION_BLUETOOTH_CONNECT)
-    fun writeCharacteristic(service: UUID, characteristic: UUID, value: Short) {
+    fun writeCharacteristic(service: UUID, characteristic: UUID, value: Int) {
         val c = gatt?.getService(service)?.getCharacteristic(characteristic)
         if (c != null) {
-            val buffer = ByteBuffer.allocate(2)
-            buffer.putShort(value)
-
-            c.value = buffer.array()
-            val success = gatt?.writeCharacteristic(c)
+            val success = c.setValue(value, FORMAT_UINT16, 0);
             Log.v("bt", "Write status: $success")
         }
     }

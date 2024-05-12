@@ -98,7 +98,7 @@ class BLEViewModel(private val application: Application): AndroidViewModel(appli
     }
 
     @RequiresPermission(PERMISSION_BLUETOOTH_CONNECT)
-    fun writeCharacteristic(service: UUID, characteristic: UUID, value: Short) {
+    fun writeCharacteristic(service: UUID, characteristic: UUID, value: Int) {
         activeConnection.value?.writeCharacteristic(service, characteristic, value)
     }
 

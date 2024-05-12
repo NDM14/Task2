@@ -20,12 +20,24 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.UUID
 import android.util.Log
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withRunningRecomposer
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
+import java.lang.NumberFormatException
 
 var WEATHER_SERVICE_UUID: String = "00000002-0000-0000-fdfd-fdfdfdfdfdfd"
 var FAN_SERVICE_UUID: String = "00000001-0000-0000-fdfd-fdfdfdfdfdfd"
 var TEMP_UUID_S: String = "00002a1c-0000-1000-8000-00805f9b34fb"
 var TEMP_UUID: UUID = UUID.fromString("00002a1c-0000-1000-8000-00805f9b34fb")
 var HUM_UUID: UUID = UUID.fromString("00002a6f-0000-1000-8000-00805f9b34fb")
+
 @Composable
 fun DeviceScreen(
     unselectDevice: () -> Unit,
@@ -35,12 +47,10 @@ fun DeviceScreen(
     connect: () -> Unit,
     discoverServices: () -> Unit,
     readCharacteristic: (UUID, UUID) -> Unit,
-    writeCharacteristic: (UUID, UUID, Short) -> Unit,
+    writeCharacteristic: (UUID, UUID, Int) -> Unit,
 ) {
     val weatherService = discoveredCharacteristics.get(WEATHER_SERVICE_UUID);
     val fanService = discoveredCharacteristics.get(FAN_SERVICE_UUID);
-    val temperature = null;
-    val humidity = null;
 
     Column(
         Modifier.scrollable(rememberScrollState(), Orientation.Vertical)
@@ -59,9 +69,11 @@ fun DeviceScreen(
                         WEATHER_SERVICE_UUID -> {
                             "[Weather]"
                         }
+
                         FAN_SERVICE_UUID -> {
                             "[Fan]"
                         }
+
                         else -> {
                             "[Unknown] $serviceUuid"
                         }
@@ -76,21 +88,86 @@ fun DeviceScreen(
                 }
             }
         }
-        Button(onClick = { readCharacteristic(UUID.fromString(WEATHER_SERVICE_UUID), TEMP_UUID) }, enabled = weatherService != null) {
-            Text("Read Temperature")
-        }
-        Button(onClick = { readCharacteristic(UUID.fromString(WEATHER_SERVICE_UUID), HUM_UUID) }, enabled = weatherService != null) {
-            Text("Read Humidity")
 
+        if (weatherService != null) {
+            WeatherDisplay(currentValue, readCharacteristic)
         }
 
-        if (currentValue != null) {
-            Text("Last value: $currentValue" )
-            Log.i("Last value", currentValue)
+        if (fanService != null) {
+            FanControl(writeCharacteristic)
         }
+
+        FanControl(writeCharacteristic)
+
 
         OutlinedButton(modifier = Modifier.padding(top = 40.dp), onClick = unselectDevice) {
             Text("Disconnect")
         }
     }
+}
+
+@Composable
+fun WeatherDisplay(currentValue: String?, readCharacteristic: (UUID, UUID) -> Unit) {
+    Button(onClick = { readCharacteristic(UUID.fromString(WEATHER_SERVICE_UUID), TEMP_UUID) }) {
+        Text("Read Temperature")
+    }
+    Button(onClick = { readCharacteristic(UUID.fromString(WEATHER_SERVICE_UUID), HUM_UUID) }) {
+        Text("Read Humidity")
+    }
+
+    if (currentValue != null) {
+        Text("Last value: $currentValue")
+        Log.i("Last value", currentValue)
+    }
+
+    Button(onClick = { readCharacteristic(UUID.fromString(WEATHER_SERVICE_UUID), HUM_UUID) }) {
+        Text("Read Humidity")
+    }
+}
+
+@Composable
+fun FanControl(writeCharacteristic: (UUID, UUID, Int) -> Unit) {
+    var text by remember { mutableStateOf("") }
+
+    var textAsInt: Int? = null;
+
+    try {
+        textAsInt = text.toInt();
+    } catch (_: NumberFormatException) {
+    }
+    TextField(
+        value = text,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        onValueChange = { text = it },
+        label = { Text("Fan speed") })
+
+    Button(
+        enabled = textAsInt != null,
+        onClick = {
+            if (textAsInt != null) {
+                writeCharacteristic(
+                    UUID.fromString(FAN_SERVICE_UUID),
+                    UUID.fromString("10000001-0000-0000-FDFD-FDFDFDFDFDFD"),
+                    textAsInt
+                )
+            }
+        }) {
+        Text("Set speed")
+    }
+
+
+}
+
+@Preview
+@Composable
+fun PreviewDeviceScreen() {
+    DeviceScreen(
+        currentValue = "0",
+        connect = {},
+        isDeviceConnected = true,
+        unselectDevice = {},
+        discoveredCharacteristics = mapOf(),
+        discoverServices = {},
+        readCharacteristic = { a, b -> },
+        writeCharacteristic = { a, b, c -> })
 }
