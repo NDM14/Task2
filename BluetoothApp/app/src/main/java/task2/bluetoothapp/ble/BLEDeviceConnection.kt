@@ -60,52 +60,40 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
                 val unformattedTemp =characteristic.getIntValue(FORMAT_UINT16, 1).toString()
                 val formattedTemp = unformattedTemp.replaceRange(2,2,".") + " °C"
                 currentValue.value = formattedTemp
-                Log.w("flag",characteristic.getIntValue(FORMAT_UINT8, 0).toString())
-                Log.w("formatted temp ",formattedTemp)
-                Log.w("Uuid value", characteristic.getUuid().toString())
-
-                val CLIENT_CONFIG_DESCRIPTOR = UUID.fromString("00002a1c-0000-1000-8000-00805f9b34fb")
-                val desc = characteristic.getDescriptor(CLIENT_CONFIG_DESCRIPTOR)
-                desc?.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
-                gatt.writeDescriptor(desc)
-            }else {
+                Log.i("flags", flags)
+                Log.i("formatted temp", formattedTemp)
+                Log.i("Uuid value", characteristic.getUuid().toString())
+            } else {
                 val unformattedHum =characteristic.getIntValue(FORMAT_UINT16, 0).toString()
                 val formattedHum = unformattedHum.replaceRange(2,2,".") + " %"
                 currentValue.value = formattedHum
-                Log.w("formatted hum ",formattedHum)
-                Log.w("Uuid value", characteristic.getUuid().toString())
-
-
-
+                Log.i("formatted hum", formattedHum)
+                Log.i("Uuid value", characteristic.getUuid().toString())
             }
-
-
-
         }
+
+        @RequiresPermission(PERMISSION_BLUETOOTH_CONNECT)
         @Deprecated("Deprecated in Java")
         override fun onCharacteristicChanged(
-            gatt:BluetoothGatt?,
+            gatt: BluetoothGatt?,
             characteristic: BluetoothGattCharacteristic
-        ){
-            Log.i("in characteristic changed","in characteristic changed")
+        ) {
+            Log.i("bt","in characteristic changed")
 
             super.onCharacteristicChanged(gatt, characteristic)
 
             if (characteristic.getUuid().toString()=="00002a1c-0000-1000-8000-00805f9b34fb"){
                 val flags = characteristic.getIntValue(FORMAT_UINT8, 0).toString()
-                val unformattedTemp =characteristic.getIntValue(FORMAT_UINT16, 1).toString()
-                val formattedTemp = unformattedTemp.replaceRange(2,2,".")
+                val unformattedTemp = characteristic.getIntValue(FORMAT_UINT16, 1).toString()
+                val formattedTemp = unformattedTemp.replaceRange(2,2,".") + " °C"
                 currentValue.value = formattedTemp
-                Log.i("notification",formattedTemp )
-            }
-            else{
-                val unformattedHum =characteristic.getIntValue(FORMAT_UINT16, 0).toString()
-                val formattedHum = unformattedHum.replaceRange(2,2,".")
+                Log.i("formatted temp", formattedTemp)
+            } else {
+                val unformattedHum = characteristic.getIntValue(FORMAT_UINT16, 0).toString()
+                val formattedHum = unformattedHum.replaceRange(2,2,".") + " %"
                 currentValue.value = formattedHum
-                Log.i("formatted hum ",formattedHum)
+                Log.i("formatted hum", formattedHum)
             }
-
-
         }
 
         override fun onCharacteristicWrite(
@@ -113,8 +101,7 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
             characteristic: BluetoothGattCharacteristic,
             status: Int
         ) {
-            Log.w("bt", "onCharacteristicWrite");
-
+            Log.w("bt", "onCharacteristicWrite")
             super.onCharacteristicWrite(gatt, characteristic, status)
 
             // TODO
@@ -125,13 +112,14 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
             descriptor: BluetoothGattDescriptor,
             status: Int
         ) {
+            Log.w("bt", "onDescriptorWrite")
             super.onDescriptorWrite(gatt, descriptor, status)
 
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                Log.v("bluetooth", "Descriptor ${descriptor.uuid} of characteristic ${descriptor.characteristic.uuid}: write success")
+                Log.v("bt", "Descriptor ${descriptor.uuid} of characteristic ${descriptor.characteristic.uuid}: write success")
             }
             else {
-                Log.v("bluetooth", "Descriptor ${descriptor.uuid} of characteristic ${descriptor.characteristic.uuid}: write fail (status=$status)")
+                Log.v("bt", "Descriptor ${descriptor.uuid} of characteristic ${descriptor.characteristic.uuid}: write fail (status=$status)")
             }
         }
     }
@@ -160,20 +148,18 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
         val s = gatt?.getService(service)
         val c = s?.getCharacteristic(characteristic)
 
-
         if (c != null) {
-            val success = gatt?.readCharacteristic(c)
-            Log.v("bluetooth", "Read status: $success")
+            //val success = gatt?.readCharacteristic(c)
+            //Log.v("bluetooth", "Read status: $success")
 
             gatt?.setCharacteristicNotification(c, true)
             val CLIENT_CONFIG_DESCRIPTOR = characteristic
+            Log.i("bt", "descriptor: $CLIENT_CONFIG_DESCRIPTOR")
             val desc = c.getDescriptor(CLIENT_CONFIG_DESCRIPTOR)
+            Log.i("bt", "desc: $desc")
             desc?.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
             gatt?.writeDescriptor(desc)
-            Log.i("hum","hum")
-
-
-
+            Log.i("bt","wrote descriptor")
         }
     }
 
@@ -186,13 +172,11 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
 
             c.value = buffer.array()
             val success = gatt?.writeCharacteristic(c)
-            Log.v("bluetooth", "Write status: $success")
+            Log.v("bt", "Write status: $success")
         }
     }
 
     fun readPassword() {
         TODO("Not yet implemented")
     }
-
-
 }

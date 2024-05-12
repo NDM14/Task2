@@ -35,7 +35,7 @@ fun DeviceScreen(
     connect: () -> Unit,
     discoverServices: () -> Unit,
     readCharacteristic: (UUID, UUID) -> Unit,
-    writeCharacteristic: (UUID, UUID, Short) -> Unit
+    writeCharacteristic: (UUID, UUID, Short) -> Unit,
 ) {
     val weatherService = discoveredCharacteristics.get(WEATHER_SERVICE_UUID);
     val fanService = discoveredCharacteristics.get(FAN_SERVICE_UUID);
