@@ -86,15 +86,7 @@ fun DeviceScreen(
 
         if (currentValue != null) {
             Text("Last value: $currentValue" )
-
-            if(currentValue == null){
-                // handle null result, eg. throw exception, return default, etc
-            }  else {
-                Log.i("data type", currentValue )
-            }
-
-
-
+            Log.i("Last value", currentValue)
         }
 
         OutlinedButton(modifier = Modifier.padding(top = 40.dp), onClick = unselectDevice) {
