@@ -34,6 +34,7 @@ import java.lang.NumberFormatException
 
 var WEATHER_SERVICE_UUID: String = "00000002-0000-0000-fdfd-fdfdfdfdfdfd"
 var FAN_SERVICE_UUID: String = "00000001-0000-0000-fdfd-fdfdfdfdfdfd"
+var FAN_CHARA_UUID: UUID = UUID.fromString("10000001-0000-0000-FDFD-FDFDFDFDFDFD")
 var TEMP_UUID_S: String = "00002a1c-0000-1000-8000-00805f9b34fb"
 var TEMP_UUID: UUID = UUID.fromString("00002a1c-0000-1000-8000-00805f9b34fb")
 var HUM_UUID: UUID = UUID.fromString("00002a6f-0000-1000-8000-00805f9b34fb")
@@ -48,6 +49,7 @@ fun DeviceScreen(
     discoverServices: () -> Unit,
     readCharacteristic: (UUID, UUID) -> Unit,
     writeCharacteristic: (UUID, UUID, Int) -> Unit,
+
 ) {
     val weatherService = discoveredCharacteristics.get(WEATHER_SERVICE_UUID);
     val fanService = discoveredCharacteristics.get(FAN_SERVICE_UUID);
@@ -77,7 +79,7 @@ fun DeviceScreen(
                         else -> {
                             "[Unknown] $serviceUuid"
                         }
-                    }, fontWeight = FontWeight.Black
+                    }, fontWeight = FontWeight.Light
                 )
                 Column(modifier = Modifier.padding(start = 10.dp)) {
                     discoveredCharacteristics[serviceUuid]?.forEach {
@@ -95,10 +97,8 @@ fun DeviceScreen(
 
         if (fanService != null) {
             FanControl(writeCharacteristic)
+            Log.v("DEVICE", connect.javaClass.typeName)
         }
-
-        FanControl(writeCharacteristic)
-
 
         OutlinedButton(modifier = Modifier.padding(top = 40.dp), onClick = unselectDevice) {
             Text("Disconnect")
@@ -147,9 +147,10 @@ fun FanControl(writeCharacteristic: (UUID, UUID, Int) -> Unit) {
             if (textAsInt != null) {
                 writeCharacteristic(
                     UUID.fromString(FAN_SERVICE_UUID),
-                    UUID.fromString("10000001-0000-0000-FDFD-FDFDFDFDFDFD"),
+                    FAN_CHARA_UUID,
                     textAsInt
                 )
+
             }
         }) {
         Text("Set speed")

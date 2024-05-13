@@ -1,12 +1,10 @@
 package task2.bluetoothapp.ble
 
-import android.R.attr
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattCharacteristic.FORMAT_UINT16
-import android.bluetooth.BluetoothGattCharacteristic.FORMAT_UINT32
 import android.bluetooth.BluetoothGattCharacteristic.FORMAT_UINT8
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattService
@@ -14,7 +12,6 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import kotlinx.coroutines.flow.MutableStateFlow
-import java.nio.ByteBuffer
 import java.util.UUID
 //https://github.com/MatthiasKerat/BLETutorialYt/tree/FinalApp/app/src/main/java/com/example/bletutorial/data/ble
 //https://www.youtube.com/watch?v=qyG-SDfYNBE&t=1719s
@@ -37,6 +34,7 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
                 services.value = gatt.services
             }
             isConnected.value = connected
+
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
@@ -83,7 +81,6 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
             Log.i("bt","onCharacteristicChanged")
 
             super.onCharacteristicChanged(gatt, characteristic)
-
             // if branch: characteristic is temperature measurement
             // else branch: characteristic is humidity
             if (characteristic.getUuid().toString()=="00002a1c-0000-1000-8000-00805f9b34fb"){
@@ -100,15 +97,17 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
             }
         }
 
+        @RequiresPermission(PERMISSION_BLUETOOTH_CONNECT)
         override fun onCharacteristicWrite(
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic,
-            status: Int
+            status: Int,
+
         ) {
             Log.w("bt", "onCharacteristicWrite")
             super.onCharacteristicWrite(gatt, characteristic, status)
+            Log.v("bt", characteristic.properties.toString())
 
-            // TODO
         }
 
         // checks whether the subscription to the characteristic was successful
@@ -174,12 +173,13 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     fun writeCharacteristic(service: UUID, characteristic: UUID, value: Int) {
         val c = gatt?.getService(service)?.getCharacteristic(characteristic)
         if (c != null) {
-            val success = c.setValue(value, FORMAT_UINT16, 0);
+            c.setValue(value, FORMAT_UINT16, 0)
+            val success = gatt?.writeCharacteristic(c)
             Log.v("bt", "Write status: $success")
         }
     }
 
     fun readPassword() {
-        TODO("Not yet implemented")
+        //TODO
     }
 }

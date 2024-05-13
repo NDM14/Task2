@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanRecord
 import android.bluetooth.le.ScanResult
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
@@ -100,6 +101,7 @@ class BLEViewModel(private val application: Application): AndroidViewModel(appli
     @RequiresPermission(PERMISSION_BLUETOOTH_CONNECT)
     fun writeCharacteristic(service: UUID, characteristic: UUID, value: Int) {
         activeConnection.value?.writeCharacteristic(service, characteristic, value)
+
     }
 
     @RequiresPermission(PERMISSION_BLUETOOTH_CONNECT)
