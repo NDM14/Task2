@@ -154,8 +154,8 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
 
         if (c != null) {
             // use these 2 lines to update the values whenever the button is clicked
-            //val success = gatt?.readCharacteristic(c)
-            //Log.v("bluetooth", "Read status: $success")
+            val success = gatt?.readCharacteristic(c)
+            Log.v("bluetooth", "Read status: $success")
 
             // use these lines to update the values whenever they change (doesn't work yet)
             gatt?.setCharacteristicNotification(c, true)

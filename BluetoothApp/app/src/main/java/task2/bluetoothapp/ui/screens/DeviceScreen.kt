@@ -119,10 +119,6 @@ fun WeatherDisplay(currentValue: String?, readCharacteristic: (UUID, UUID) -> Un
         Text("Last value: $currentValue")
         Log.i("Last value", currentValue)
     }
-
-    Button(onClick = { readCharacteristic(UUID.fromString(WEATHER_SERVICE_UUID), HUM_UUID) }) {
-        Text("Read Humidity")
-    }
 }
 
 @Composable
